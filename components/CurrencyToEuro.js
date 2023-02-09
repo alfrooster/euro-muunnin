@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, Button, TextInput, ActivityIndicator } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
@@ -7,17 +7,32 @@ export default function CurrencyToEuro() {
     const [loading, setLoading] = useState(false);
     const [currency, setCurrency] = useState();
     const [result, setResult] = useState('_');
+    const [symbols, setSymbols] = useState([]);
 
     let myHeaders = new Headers();
-    myHeaders.append("apikey", "k8ci77GD79SRFkWdBXLU1Xg60TOZq2L0");
+    myHeaders.append("apikey", "API_KEY"); // insert api key
 
     const requestOptions = {
         method: 'GET',
         redirect: 'follow',
         headers: myHeaders
     };
-    
-    const fetchConversion = () => {
+
+    useEffect(() => {
+        fetchSymbols();
+    }, []);
+
+    const fetchSymbols = () => { // fetching the symbols needed for picker
+        fetch(`https://api.apilayer.com/exchangerates_data/symbols`, requestOptions)
+        .then(response => response.json())
+        .then(data => {
+            let object = data.symbols;
+            setSymbols(Object.keys(object)); // taking the keys from the symbols objects into an array
+        })
+        .catch(err => console.error(err))
+    }
+
+    const fetchConversion = () => { // using the api to convert from selected currency to eur
         setLoading(true);
         fetch(`https://api.apilayer.com/exchangerates_data/convert?to=EUR&from=${currency}&amount=${amount}`, requestOptions)
         .then(response => response.json())
@@ -41,19 +56,14 @@ export default function CurrencyToEuro() {
                 onValueChange={(itemValue, itemIndex) =>
                     setCurrency(itemValue)
                 }
-                style={{ width: 180 }}>
-                <Picker.Item label="Canadian Dollar" value="CAD" />
-                <Picker.Item label="Chinese Yuan" value="CNY" />
-                <Picker.Item label="British Pound" value="GBP" />
-                <Picker.Item label="Indian Rupee" value="INR" />
-                <Picker.Item label="Japanese Yen" value="JPY" />
-                <Picker.Item label="South Korean Won" value="KRW" />
-                <Picker.Item label="Swedish Krona" value="SEK" />
-                <Picker.Item label="United States Dollar" value="USD" />
+                style={{ width: 100 }}>
+                {symbols.map((item, index) => {
+                    return(<Picker.Item label={item} value={item} key={index} />) // mapping - symbols to picker item values
+                })}
             </Picker>
             <Button title='Convert' onPress={fetchConversion} />
             <ActivityIndicator animating={loading} />
-            <Text style={{ fontSize: 20 }}>{Math.round((result + Number.EPSILON) * 100) / 100} €</Text>
+            <Text style={{ fontSize: 20 }}>{Math.round((result + Number.EPSILON) * 100) / 100 /* round result to 2 decimals */} €</Text>
         </View>
     )
 }
