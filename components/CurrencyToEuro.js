@@ -10,7 +10,7 @@ export default function CurrencyToEuro() {
     const [symbols, setSymbols] = useState([]);
 
     let myHeaders = new Headers();
-    myHeaders.append("apikey", "API_KEY"); // insert api key
+    myHeaders.append("apikey", "k8ci77GD79SRFkWdBXLU1Xg60TOZq2L0");
 
     const requestOptions = {
         method: 'GET',
